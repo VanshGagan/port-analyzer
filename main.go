@@ -3,18 +3,18 @@ package main
 import (
 	"fmt"
 	"net"
+	"os"
 	"sync"
 	"time"
 )
 
-func worker(jobs chan int, results chan int, wg *sync.WaitGroup) {
+func worker(target string, jobs chan int, results chan int, wg *sync.WaitGroup) {
 	defer wg.Done()
-	target_ip := "127.0.0.1"
 
 	for port := range jobs {
-		address := net.JoinHostPort(target_ip, fmt.Sprintf("%d", port))
+		address := net.JoinHostPort(target, fmt.Sprintf("%d", port))
 
-		conn, err := net.DialTimeout("tcp", address, 2*time.Second)
+		conn, err := net.DialTimeout("tcp", address, 300*time.Millisecond)
 		if err != nil {
 			continue
 		}
@@ -86,10 +86,17 @@ func main() {
 	results := make(chan int)
 
 	var wg sync.WaitGroup
+	var target string
+
+	if len(os.Args) < 2 {
+		target = "127.0.0.1"
+	} else {
+		target = os.Args[1]
+	}
 
 	for i := 1; i <= 40; i++ {
 		wg.Add(1)
-		go worker(jobs, results, &wg)
+		go worker(target, jobs, results, &wg)
 	}
 
 	for port := 1; port <= 65535; port++ {
