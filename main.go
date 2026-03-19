@@ -18,9 +18,8 @@ func worker(target string, jobs chan int, results chan int, wg *sync.WaitGroup) 
 		if err != nil {
 			continue
 		}
-		conn.Close()
 		results <- port
-
+		conn.Close()
 	}
 }
 
