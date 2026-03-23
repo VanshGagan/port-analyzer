@@ -1,29 +1,23 @@
-package main
+package network
 
 import (
 	"log"
 	"net"
-	"time"
 
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"
-	"github.com/google/gopacket/pcap"
 )
 
-func main() {
-	var device = "lo"
+func SendSYNPacket(target_ip string, port int) {
+	//set src and dst ip to send the SYN packet
 	var src_ip = net.ParseIP("127.0.0.1")
-	var dst_ip = net.ParseIP("127.0.0.1")
+	var dst_ip = net.ParseIP(target_ip)
 
+	//set src and dst ports to send the SYN packet
 	var src_port = layers.TCPPort(51234)
-	var dst_port = layers.TCPPort(631)
+	var dst_port = layers.TCPPort(port)
 
-	handle, err := pcap.OpenLive(device, 1600, false, pcap.BlockForever)
-	if err != nil {
-		log.Panicln("unable to open the handle")
-	}
-	defer handle.Close()
-
+	//set layers of the packet
 	ip := &layers.IPv4{
 		SrcIP:    src_ip,
 		DstIP:    dst_ip,
@@ -37,6 +31,7 @@ func main() {
 		SYN:     true,
 		Window:  14600,
 	}
+
 	tcp.SetNetworkLayerForChecksum(ip)
 
 	buf := gopacket.NewSerializeBuffer()
@@ -49,17 +44,23 @@ func main() {
 		log.Fatal(err)
 	}
 
+	//create a RAW socket
 	conn, err := net.ListenPacket("ip4:tcp", "0.0.0.0")
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer conn.Close()
+
+	//ignore the other header of the TCP packet
 	dataToSend := buf.Bytes()[20:]
-	log.Println("writing request")
+	//log.Println("writing request")
+
+	//send the packet
 	if _, err := conn.WriteTo(dataToSend, &net.IPAddr{IP: dst_ip}); err != nil {
 		log.Fatal(err)
 
 	}
-	time.Sleep(5 * time.Second)
+	//wait 1 seconds to not lose the packet
+	//time.Sleep(500 * time.Millisecond)
 
 }

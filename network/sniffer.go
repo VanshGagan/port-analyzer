@@ -1,7 +1,6 @@
-package main
+package network
 
 import (
-	"fmt"
 	"log"
 	"os"
 
@@ -10,14 +9,11 @@ import (
 	"github.com/google/gopacket/pcap"
 )
 
-var device = "lo"
-
-func main() {
+func Sniffer(device string, results chan int) {
 	if len(os.Args) < 2 {
 		log.Fatal("Usage: ./sniffer <port>")
 
 	}
-	port_parameter := os.Args[1]
 
 	handle, err := pcap.OpenLive(device, 1600, false, pcap.BlockForever)
 	if err != nil {
@@ -25,7 +21,7 @@ func main() {
 	}
 	defer handle.Close()
 
-	filter := fmt.Sprintf("tcp and port %s", port_parameter)
+	filter := "tcp and port 51234"
 	handle.SetBPFFilter(filter)
 
 	packets := gopacket.NewPacketSource(handle, handle.LinkType())
@@ -36,22 +32,12 @@ func main() {
 
 		if tcpLayer != nil && ipLayer != nil {
 			tcp, _ := tcpLayer.(*layers.TCP)
-			ip, _ := ipLayer.(*layers.IPv4)
+			//ip, _ := ipLayer.(*layers.IPv4)
 
-			flags := ""
-			if tcp.SYN {
-				flags += "SYN "
+			if tcp.SYN && tcp.ACK {
+				openPort := tcp.SrcPort
+				results <- int(openPort)
 			}
-			if tcp.ACK {
-				flags += "ACK "
-			}
-			if tcp.FIN {
-				flags += "FIN "
-			}
-			if tcp.RST {
-				flags += "RST "
-			}
-			fmt.Printf("Sender: %s ----- Reciever: %s\npacket with flags: %s\n\n\n", ip.SrcIP, ip.DstIP, flags)
 		}
 
 	}

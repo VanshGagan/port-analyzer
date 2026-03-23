@@ -2,24 +2,23 @@ package main
 
 import (
 	"fmt"
-	"net"
 	"os"
+	"port-analyzer/network"
 	"sync"
 	"time"
 )
 
-func worker(target string, jobs chan int, results chan int, wg *sync.WaitGroup) {
+var device = "lo"
+
+func worker(target string, jobs chan int, wg *sync.WaitGroup) {
 	defer wg.Done()
 
 	for port := range jobs {
-		address := net.JoinHostPort(target, fmt.Sprintf("%d", port))
-
-		conn, err := net.DialTimeout("tcp", address, 300*time.Millisecond)
-		if err != nil {
-			continue
+		network.SendSYNPacket(target, port)
+		if port%5000 == 0 {
+			fmt.Printf("... Scanner ist bei Port %d ...\n", port)
 		}
-		results <- port
-		conn.Close()
+		time.Sleep(100 * time.Microsecond)
 	}
 }
 
@@ -87,15 +86,17 @@ func main() {
 	var wg sync.WaitGroup
 	var target string
 
+	go network.Sniffer(device, results)
+
 	if len(os.Args) < 2 {
 		target = "127.0.0.1"
 	} else {
 		target = os.Args[1]
 	}
 
-	for i := 1; i <= 40; i++ {
+	for i := 1; i <= 250; i++ {
 		wg.Add(1)
-		go worker(target, jobs, results, &wg)
+		go worker(target, jobs, &wg)
 	}
 
 	for port := 1; port <= 65535; port++ {
@@ -105,6 +106,7 @@ func main() {
 
 	go func() {
 		wg.Wait()
+		time.Sleep(2 * time.Second)
 		close(results)
 	}()
 
@@ -115,5 +117,8 @@ func main() {
 		} else {
 			fmt.Printf("Port %d open\n", res)
 		}
+
 	}
+	fmt.Print("--- scan finished ---\n")
+	os.Exit(0)
 }
