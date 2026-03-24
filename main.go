@@ -2,23 +2,26 @@ package main
 
 import (
 	"fmt"
+	"log"
+	"net"
 	"os"
 	"port-analyzer/network"
 	"sync"
 	"time"
 )
 
-var device = "lo"
+var device = "any"
 
-func worker(target string, jobs chan int, wg *sync.WaitGroup) {
+func worker(target string, jobs chan int, wg *sync.WaitGroup, conn net.PacketConn) {
 	defer wg.Done()
 
 	for port := range jobs {
-		network.SendSYNPacket(target, port)
+		network.SendSYNPacket(target, port, conn)
+
 		if port%5000 == 0 {
 			fmt.Printf("... Scanner ist bei Port %d ...\n", port)
 		}
-		time.Sleep(100 * time.Microsecond)
+		time.Sleep(1 * time.Millisecond)
 	}
 }
 
@@ -80,6 +83,12 @@ func main() {
 		27017: "MongoDB",
 	}
 
+	conn, err := net.ListenPacket("ip4:tcp", "0.0.0.0")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer conn.Close()
+
 	jobs := make(chan int)
 	results := make(chan int)
 
@@ -94,9 +103,9 @@ func main() {
 		target = os.Args[1]
 	}
 
-	for i := 1; i <= 250; i++ {
+	for i := 1; i <= 20; i++ {
 		wg.Add(1)
-		go worker(target, jobs, &wg)
+		go worker(target, jobs, &wg, conn)
 	}
 
 	for port := 1; port <= 65535; port++ {

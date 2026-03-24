@@ -8,7 +8,7 @@ import (
 	"github.com/google/gopacket/layers"
 )
 
-func SendSYNPacket(target_ip string, port int) {
+func SendSYNPacket(target_ip string, port int, conn net.PacketConn) {
 	//set src and dst ip to send the SYN packet
 	var src_ip = net.ParseIP("127.0.0.1")
 	var dst_ip = net.ParseIP(target_ip)
@@ -40,19 +40,13 @@ func SendSYNPacket(target_ip string, port int) {
 		FixLengths:       true,
 	}
 
-	if err := gopacket.SerializeLayers(buf, opts, ip, tcp); err != nil {
+	if err := gopacket.SerializeLayers(buf, opts, tcp); err != nil {
 		log.Fatal(err)
 	}
 
 	//create a RAW socket
-	conn, err := net.ListenPacket("ip4:tcp", "0.0.0.0")
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer conn.Close()
 
-	//ignore the other header of the TCP packet
-	dataToSend := buf.Bytes()[20:]
+	dataToSend := buf.Bytes()
 	//log.Println("writing request")
 
 	//send the packet
@@ -61,6 +55,6 @@ func SendSYNPacket(target_ip string, port int) {
 
 	}
 	//wait 1 seconds to not lose the packet
-	//time.Sleep(500 * time.Millisecond)
+	//time.Sleep(500 * time.Microsecond)
 
 }

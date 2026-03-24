@@ -2,7 +2,6 @@ package network
 
 import (
 	"log"
-	"os"
 
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"
@@ -10,10 +9,6 @@ import (
 )
 
 func Sniffer(device string, results chan int) {
-	if len(os.Args) < 2 {
-		log.Fatal("Usage: ./sniffer <port>")
-
-	}
 
 	handle, err := pcap.OpenLive(device, 1600, false, pcap.BlockForever)
 	if err != nil {
@@ -21,7 +16,7 @@ func Sniffer(device string, results chan int) {
 	}
 	defer handle.Close()
 
-	filter := "tcp and port 51234"
+	filter := "tcp and dst port 51234"
 	handle.SetBPFFilter(filter)
 
 	packets := gopacket.NewPacketSource(handle, handle.LinkType())
