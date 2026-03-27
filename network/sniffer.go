@@ -16,7 +16,7 @@ func Sniffer(device string, results chan int) {
 	}
 	defer handle.Close()
 
-	filter := "tcp and dst port 51234"
+	filter := "tcp and src host 192.168.1.1"
 	handle.SetBPFFilter(filter)
 
 	packets := gopacket.NewPacketSource(handle, handle.LinkType())
@@ -28,6 +28,7 @@ func Sniffer(device string, results chan int) {
 		if tcpLayer != nil && ipLayer != nil {
 			tcp, _ := tcpLayer.(*layers.TCP)
 			//ip, _ := ipLayer.(*layers.IPv4)
+			//fmt.Printf("FROM PORT: %d\n", tcp.SrcPort)
 
 			if tcp.SYN && tcp.ACK {
 				openPort := tcp.SrcPort

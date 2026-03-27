@@ -18,10 +18,9 @@ func worker(target string, jobs chan int, wg *sync.WaitGroup, conn net.PacketCon
 	for port := range jobs {
 		network.SendSYNPacket(target, port, conn)
 
-		if port%5000 == 0 {
-			fmt.Printf("... Scanner ist bei Port %d ...\n", port)
-		}
-		time.Sleep(1 * time.Millisecond)
+		fmt.Printf("... Scanner ist bei Port %d ...\n", port)
+
+		time.Sleep(100 * time.Millisecond)
 	}
 }
 
@@ -96,6 +95,7 @@ func main() {
 	var target string
 
 	go network.Sniffer(device, results)
+	time.Sleep(1 * time.Second)
 
 	if len(os.Args) < 2 {
 		target = "127.0.0.1"
@@ -103,12 +103,12 @@ func main() {
 		target = os.Args[1]
 	}
 
-	for i := 1; i <= 20; i++ {
+	for i := 1; i <= 10; i++ {
 		wg.Add(1)
 		go worker(target, jobs, &wg, conn)
 	}
 
-	for port := 1; port <= 65535; port++ {
+	for port := range portNames {
 		jobs <- port
 	}
 	close(jobs)
@@ -119,8 +119,14 @@ func main() {
 		close(results)
 	}()
 
+	seen := make(map[int]bool)
+
 	for res := range results {
 		name, exists := portNames[res]
+		if seen[res] {
+			continue
+		}
+		seen[res] = true
 		if exists {
 			fmt.Printf("Port %d open --> %s\n", res, name)
 		} else {

@@ -10,7 +10,7 @@ import (
 
 func SendSYNPacket(target_ip string, port int, conn net.PacketConn) {
 	//set src and dst ip to send the SYN packet
-	var src_ip = net.ParseIP("127.0.0.1")
+	var src_ip = net.ParseIP("192.168.1.221")
 	var dst_ip = net.ParseIP(target_ip)
 
 	//set src and dst ports to send the SYN packet
