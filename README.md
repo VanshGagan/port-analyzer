@@ -27,3 +27,6 @@ Next, we want to send a simple ***SYN*** packet to the port in order to receive 
 ***
 
 For all these steps, the **gopacket** library is perfect, and I will be working with it.
+
+### Contributors: 
+LeonHTM & Vansh Gagan
