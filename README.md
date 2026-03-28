@@ -1,29 +1,48 @@
 # Port Analyzer
 
-## My idea
+## Overview
 
-I am currently building an efficient port scanner based on TCP-protocol. The current port scanner in main.go attempts a 3-way handshake with every port using a worker pool of 40 workers. 
+This project is a custom-built TCP SYN port scanner written in Go.
 
-***
+It is designed to efficiently detect open ports without completing a full TCP three-way handshake.
 
-This means I send a ***SYN*** packet, the port sends back a ***SYN/ACK***, and I then send an ***ACK*** again; thus, the connection is established. 
-
-However, this is very inefficient. First of all, we only know that a port is closed once the timeout has expired, which causes the program to lose a lot of time.
-
-Therefore, my idea is to develop a program that sends a ***SYN*** packet and subsequently sniffs for a ***SYN/ACK***. If this arrives, the port is immediately marked as open without building a 3-way handshake connection. However, if a ***RST*** comes back, then this means the port is closed; if nothing comes back, then the port is filtered (meaning it is being blocked). This way, my program can become much faster. Therefore:
+Instead of establishing full connections, the scanner sends raw **SYN** packets and analyzes responses using a packet sniffer.
 
 ***
+## How it works
 
-## Step 1: Build a Sniffer (Almost finished)
+The scanner follows the logic of a classic **SYN** scan:
 
-Build a sniffer that sniffs all packets where they come from and where they need to go. This allows us to easily catch ***SYN/ACK*** packets. We can already test this with our basic port analyzer: since it performs a 3-way handshake, we should be able to see directly with the sniffer that a ***SYN/ACK*** is coming to us.
+We send a raw **SYN** packet to a specific port of the target.
+Then we catch the response of the target-port and look if it was a **SYN-ACK** packet.
+
+If this is true then the port is open.
+
+
+## Efficiency    
+
+To reduce running time, the scanner uses goroutines and worker-pools for parallel working. 
+At the moment it scanns the most important ports of the target (53 ports).
 
 ***
+## Architecture
 
-## Step 2: Send a Raw Packet
+```bash
 
-Next, we want to send a simple ***SYN*** packet to the port in order to receive the ***SYN/ACK*** packet. To do this, we must be able to construct such a packet ourselves.
+port-analyzer/
+├── main.go               # Main entry point: Worker pool, job queue, orchestrator
+├── main                  # (Compiled binary after go build)
+├── go.mod                # Go module definition
+├── go.sum                # Go module checksums
+├── README.md             # Project description and instructions
+├── network/              # Network-related code
+│   ├── sender.go         # Sends raw TCP SYN packets
+│   └── sniffer.go        # Sniffs incoming TCP packets for SYN/ACK detection
+└── utils/                # Helper functions
+    └── getIpAdress.go    # Automatically determines the local IP
+    
+```
 
 ***
-
-For all these steps, the **gopacket** library is perfect, and I will be working with it.
+# ⚠️ Disclaimer
+This project was built for educational purposes only, mainly for my own learning.
