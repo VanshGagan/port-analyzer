@@ -31,6 +31,7 @@ func worker(target string, jobs chan int, wg *sync.WaitGroup, conn net.PacketCon
 }
 
 func main() {
+	s := time.Now()
 
 	var portNames = map[int]string{
 		20:    "FTP Data",
@@ -145,6 +146,9 @@ func main() {
 		}
 
 	}
+	t := time.Now()
+	elapsed := t.Sub(s)
 	fmt.Print("--- scan finished ---\n")
+	fmt.Printf("\nscanned in %.2f seconds\n", elapsed.Seconds()) // <- hier
 	os.Exit(0)
 }
