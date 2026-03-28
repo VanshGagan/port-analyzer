@@ -12,13 +12,19 @@ import (
 
 var device = "any"
 
+const (
+	ColorGreen  = "\033[32m"
+	ColorYellow = "\033[33m"
+	ColorReset  = "\033[0m"
+)
+
 func worker(target string, jobs chan int, wg *sync.WaitGroup, conn net.PacketConn) {
 	defer wg.Done()
 
 	for port := range jobs {
 		network.SendSYNPacket(target, port, conn)
 
-		fmt.Printf("... Scanner ist bei Port %d ...\n", port)
+		fmt.Printf("... scanner is on port %d ...\n", port)
 
 		time.Sleep(100 * time.Millisecond)
 	}
@@ -47,7 +53,7 @@ func main() {
 		445:   "SMB",
 		465:   "SMTPS",
 		500:   "ISAKMP",
-		587:   "SMTP (modern)",
+		587:   "SMTP",
 		631:   "CUPS",
 		993:   "IMAPS",
 		995:   "POP3S",
@@ -73,15 +79,21 @@ func main() {
 		7001:  "WebLogic",
 		7474:  "Neo4j",
 		7687:  "Neo4j Bolt",
-		8000:  "HTTP Alt",
-		8080:  "HTTP Alt",
-		8443:  "HTTPS Alt",
+		8000:  "HTTP",
+		8080:  "HTTP",
+		8443:  "HTTPS",
 		9000:  "Dev Server",
 		9090:  "Prometheus",
 		9200:  "Elasticsearch",
 		27017: "MongoDB",
 	}
+	var target string
 
+	if len(os.Args) < 2 {
+		target = "127.0.0.1"
+	} else {
+		target = os.Args[1]
+	}
 	conn, err := net.ListenPacket("ip4:tcp", "0.0.0.0")
 	if err != nil {
 		log.Fatal(err)
@@ -92,16 +104,9 @@ func main() {
 	results := make(chan int)
 
 	var wg sync.WaitGroup
-	var target string
 
-	go network.Sniffer(device, results)
+	go network.Sniffer(device, results, target)
 	time.Sleep(1 * time.Second)
-
-	if len(os.Args) < 2 {
-		target = "127.0.0.1"
-	} else {
-		target = os.Args[1]
-	}
 
 	for i := 1; i <= 10; i++ {
 		wg.Add(1)
@@ -121,6 +126,8 @@ func main() {
 
 	seen := make(map[int]bool)
 
+	time.Sleep(2 * time.Second)
+
 	for res := range results {
 		name, exists := portNames[res]
 		if seen[res] {
@@ -128,9 +135,13 @@ func main() {
 		}
 		seen[res] = true
 		if exists {
-			fmt.Printf("Port %d open --> %s\n", res, name)
+			fmt.Printf("\n%s┌──────────────────────────────────────────┐%s\n", ColorGreen, ColorReset)
+			fmt.Printf("│  %s[FOUND]%s Port: %-5d  Name: %-13s │\n", ColorGreen, ColorReset, res, name)
+			fmt.Printf("%s└──────────────────────────────────────────┐%s\n", ColorGreen, ColorReset)
 		} else {
-			fmt.Printf("Port %d open\n", res)
+			fmt.Printf("\n%s┌──────────────────────────────────────────┐%s\n", ColorGreen, ColorReset)
+			fmt.Printf("│  %s[FOUND]%s Port: %-5d              │\n", ColorGreen, ColorReset, res)
+			fmt.Printf("%s└──────────────────────────────────────────┐%s\n", ColorGreen, ColorReset)
 		}
 
 	}

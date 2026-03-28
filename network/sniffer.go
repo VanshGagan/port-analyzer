@@ -1,6 +1,7 @@
 package network
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/google/gopacket"
@@ -8,7 +9,7 @@ import (
 	"github.com/google/gopacket/pcap"
 )
 
-func Sniffer(device string, results chan int) {
+func Sniffer(device string, results chan int, target_ip string) {
 
 	handle, err := pcap.OpenLive(device, 1600, false, pcap.BlockForever)
 	if err != nil {
@@ -16,7 +17,7 @@ func Sniffer(device string, results chan int) {
 	}
 	defer handle.Close()
 
-	filter := "tcp and src host 192.168.1.1"
+	filter := fmt.Sprintf("tcp and src host %s", target_ip)
 	handle.SetBPFFilter(filter)
 
 	packets := gopacket.NewPacketSource(handle, handle.LinkType())
