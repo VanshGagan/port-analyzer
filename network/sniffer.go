@@ -1,7 +1,6 @@
 package network
 
 import (
-	"fmt"
 	"log"
 
 	"github.com/google/gopacket"
@@ -11,13 +10,16 @@ import (
 
 func Sniffer(device string, results chan int, target_ip string) {
 
+	//open handle
 	handle, err := pcap.OpenLive(device, 1600, false, pcap.BlockForever)
 	if err != nil {
 		log.Panicln("unable to open the handle")
 	}
 	defer handle.Close()
 
-	filter := fmt.Sprintf("tcp and src host %s", target_ip)
+	//set tcp filter -> we wan't to catch tcp packets
+	//filter := fmt.Sprintf("tcp and src host %s", target_ip)
+	filter := "tcp"
 	handle.SetBPFFilter(filter)
 
 	packets := gopacket.NewPacketSource(handle, handle.LinkType())
@@ -31,6 +33,7 @@ func Sniffer(device string, results chan int, target_ip string) {
 			//ip, _ := ipLayer.(*layers.IPv4)
 			//fmt.Printf("FROM PORT: %d\n", tcp.SrcPort)
 
+			//if we have syn-ack -> write to results
 			if tcp.SYN && tcp.ACK {
 				openPort := tcp.SrcPort
 				results <- int(openPort)

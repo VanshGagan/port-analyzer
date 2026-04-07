@@ -19,6 +19,7 @@ const (
 	ColorReset  = "\033[0m"
 )
 
+//the work of each worker
 func worker(target string, jobs chan int, wg *sync.WaitGroup, conn net.PacketConn) {
 	defer wg.Done()
 
