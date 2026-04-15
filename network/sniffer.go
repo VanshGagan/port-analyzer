@@ -6,6 +6,7 @@ import (
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"
 	"github.com/google/gopacket/pcap"
+	"port-analyzer/utils"
 )
 
 func Sniffer(device string, results chan int, target_ip string) {
@@ -19,10 +20,10 @@ func Sniffer(device string, results chan int, target_ip string) {
 
 	//set tcp filter -> we wan't to catch tcp packets
 	//filter := fmt.Sprintf("tcp and src host %s", target_ip)
-	filter := "tcp"
+	filter := fmt.Sprintf("tcp and dst host %s", utils.GetIP().String())
 	handle.SetBPFFilter(filter)
 	var os_detected bool = false
-	//var os string
+	var os string
 
 	packets := gopacket.NewPacketSource(handle, handle.LinkType())
 
@@ -34,10 +35,13 @@ func Sniffer(device string, results chan int, target_ip string) {
 			tcp, _ := tcpLayer.(*layers.TCP)
 			ip, _ := ipLayer.(*layers.IPv4)
 			//fmt.Printf("FROM PORT: %d\n", tcp.SrcPort)
+
 			
 			if os_detected == false && ip.TTL > 0 {
-				fmt.Print("\r             \r")
+				fmt.Print("\r              \r")
 				fmt.Printf("\nTTL is: %d\n", ip.TTL)
+				os = utils.DetectOs(ip.TTL)
+				fmt.Printf("\nOperating system is probably: %s\n", os)
 				os_detected = true
 			}
 

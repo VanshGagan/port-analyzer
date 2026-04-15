@@ -10,7 +10,7 @@ import (
 )
 
 
-//read the banner of http
+//read the banner
 func main() {
 
 
