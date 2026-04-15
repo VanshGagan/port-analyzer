@@ -1,48 +1,89 @@
 # Port Analyzer
 
-## Overview
+A custom-built SYN-based port scanner written in Go, featuring packet sniffing, banner grabbing, and basic OS detection.
 
-This project is a custom-built TCP SYN port scanner written in Go.
+## Features
+- SYN-based port scanning using raw packets
+- Packet sniffing and SYN-ACK filtering
+- Banner grabbing (1024 bytes)
+- Basic OS detection using TTL analysis
+- Detection of common ports and services
 
-It is designed to efficiently detect open ports without completing a full TCP three-way handshake.
-
-Instead of establishing full connections, the scanner sends raw **SYN** packets and analyzes responses using a packet sniffer.
-
-***
-## How it works
-
-The scanner follows the logic of a classic **SYN** scan:
-
-We send a raw **SYN** packet to a specific port of the target.
-Then we catch the response of the target-port and look if it was a **SYN-ACK** packet.
-
-If this is true then the port is open.
-
-
-## Efficiency    
-
-To reduce running time, the scanner uses goroutines and worker-pools for parallel working. 
-At the moment it scanns the most important ports of the target (53 ports).
-
-***
-## Architecture
-
+## Usage
+### Port-Analyzer
 ```bash
+sudo go run main.go <target-ip> (port-scanner)
+```
+### Banner-Grabber
+```bash
+sudo go run banner/grabber.go <target-ip> (banner-grabber)
+```
+
+
+## Example Output
+***
+### Port-Analyzer
+```bash
+             
+TTL is: 57
+
+Operating system is probably: Linux/Mac/Android
+Scanning.. 
+┌──────────────────────────────────────────┐
+│  [FOUND] Port: 22     Name: SSH          │
+└──────────────────────────────────────────┐
+
+┌──────────────────────────────────────────┐
+│  [FOUND] Port: 21     Name: FTP          │
+└──────────────────────────────────────────┐
+
+┌──────────────────────────────────────────┐
+│  [FOUND] Port: 80     Name: HTTP         │
+└──────────────────────────────────────────┐
+--- scan finished ---
+
+scanned in 3.86 seconds
+```
+- Predicted OS
+- Found open-ports (22, 21, 80)
+- Duration was 3.86 seconds
+
+### Banner Grabber
+```bash
+SSH-2.0-OpenSSH_6.6.1p1 Ubuntu-2ubuntu2.13
+```
+- Grabbed SSH banner
+- Identified OpenSSH version 6.6.1p1
+- Detected Ubuntu system
+
+## Performance
+
+- Uses concurrent workers to scan multiple ports in parallel.
+- Improves scanning efficiency, especially for larger port ranges. 
+- Designed with scalability in mind for future extensions.
+
+## Architecture
+```bash 
 
 port-analyzer/
 ├── main.go               # Main entry point: Worker pool, job queue, orchestrator
-├── main                  # (Compiled binary after go build)
 ├── go.mod                # Go module definition
 ├── go.sum                # Go module checksums
 ├── README.md             # Project description and instructions
 ├── network/              # Network-related code
-│   ├── sender.go         # Sends raw TCP SYN packets
-│   └── sniffer.go        # Sniffs incoming TCP packets for SYN/ACK detection
+│   └── sender.go         # Sends raw TCP SYN packets
+│   └── sniffer.go        # Sniffs incoming TCP packets for SYN/ACK detection and TTL analysis
+└── banner/               # banner grabbing folder
+│   └── grabber.go        # grabs the banner of open ports
 └── utils/                # Helper functions
     └── getIpAdress.go    # Automatically determines the local IP
-    
+    └── ImportantPorts.go # list of important ports
+    └── loading.go        # loading animation
+    └── osDetection.go    # simple skript to determine the operating system with TTL
 ```
 
-***
-# ⚠️ Disclaimer
-This project was built for educational purposes only, mainly for my own learning.
+
+## Disclaimer
+
+This project was built for educational purposes only. 
+Only scan systems you own or have explicit permission to test.
