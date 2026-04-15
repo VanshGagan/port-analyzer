@@ -2,7 +2,7 @@ package network
 
 import (
 	"log"
-
+	"fmt"
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"
 	"github.com/google/gopacket/pcap"
@@ -21,6 +21,8 @@ func Sniffer(device string, results chan int, target_ip string) {
 	//filter := fmt.Sprintf("tcp and src host %s", target_ip)
 	filter := "tcp"
 	handle.SetBPFFilter(filter)
+	var os_detected bool = false
+	//var os string
 
 	packets := gopacket.NewPacketSource(handle, handle.LinkType())
 
@@ -30,14 +32,21 @@ func Sniffer(device string, results chan int, target_ip string) {
 
 		if tcpLayer != nil && ipLayer != nil {
 			tcp, _ := tcpLayer.(*layers.TCP)
-			//ip, _ := ipLayer.(*layers.IPv4)
+			ip, _ := ipLayer.(*layers.IPv4)
 			//fmt.Printf("FROM PORT: %d\n", tcp.SrcPort)
+			
+			if os_detected == false && ip.TTL > 0 {
+				fmt.Print("\r             \r")
+				fmt.Printf("\nTTL is: %d\n", ip.TTL)
+				os_detected = true
+			}
 
 			//if we have syn-ack -> write to results
 			if tcp.SYN && tcp.ACK {
 				openPort := tcp.SrcPort
 				results <- int(openPort)
 			}
+			
 		}
 
 	}
