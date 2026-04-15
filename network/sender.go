@@ -11,6 +11,7 @@ import (
 )
 
 func SendSYNPacket(target_ip string, port int, conn net.PacketConn) {
+	
 	//set src and dst ip to send the SYN packet
 	var src_ip = utils.GetIP()
 	var dst_ip = net.ParseIP(target_ip)
@@ -34,8 +35,10 @@ func SendSYNPacket(target_ip string, port int, conn net.PacketConn) {
 		Window:  14600,
 	}
 
+	//compute checksum
 	tcp.SetNetworkLayerForChecksum(ip)
 
+	//build the packet
 	buf := gopacket.NewSerializeBuffer()
 	opts := gopacket.SerializeOptions{
 		ComputeChecksums: true,
@@ -49,14 +52,12 @@ func SendSYNPacket(target_ip string, port int, conn net.PacketConn) {
 	//create a RAW socket
 
 	dataToSend := buf.Bytes()
-	//log.Println("writing request")
 
 	//send the packet
 	if _, err := conn.WriteTo(dataToSend, &net.IPAddr{IP: dst_ip}); err != nil {
 		log.Fatal(err)
 
 	}
-	//wait 1 seconds to not lose the packet
-	//time.Sleep(500 * time.Microsecond)
+
 
 }

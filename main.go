@@ -26,28 +26,34 @@ func worker(target string, jobs chan int, wg *sync.WaitGroup, conn net.PacketCon
 	for port := range jobs {
 		network.SendSYNPacket(target, port, conn)
 
-		fmt.Printf("... scanner is on port %d ...\n", port)
+		//fmt.Printf("... scanner is on port %d ...\n", port)
 
 		time.Sleep(100 * time.Millisecond)
 	}
 }
 
 func main() {
+	//start timer and loading animation
 	s := time.Now()
+	go utils.Loading()
+
 	var portNames map[int]string
 	portNames = utils.PortNames
-	var target string
 
+	var target string
 	if len(os.Args) < 2 {
 		target = "127.0.0.1"
 	} else {
 		target = os.Args[1]
 	}
+
+
 	conn, err := net.ListenPacket("ip4:tcp", "0.0.0.0")
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer conn.Close()
+
 
 	jobs := make(chan int)
 	results := make(chan int)
@@ -77,6 +83,8 @@ func main() {
 
 	time.Sleep(2 * time.Second)
 
+	
+
 	for res := range results {
 		name, exists := portNames[res]
 		if seen[res] {
@@ -85,7 +93,7 @@ func main() {
 		seen[res] = true
 		if exists {
 			fmt.Printf("\n%s┌──────────────────────────────────────────┐%s\n", ColorGreen, ColorReset)
-			fmt.Printf("│  %s[FOUND]%s Port: %-5d  Name: %-13s │\n", ColorGreen, ColorReset, res, name)
+			fmt.Printf("│  %s[FOUND]%s Port: %-5d  Name: %-13s│\n", ColorGreen, ColorReset, res, name)
 			fmt.Printf("%s└──────────────────────────────────────────┐%s\n", ColorGreen, ColorReset)
 		} else {
 			fmt.Printf("\n%s┌──────────────────────────────────────────┐%s\n", ColorGreen, ColorReset)
@@ -94,8 +102,18 @@ func main() {
 		}
 
 	}
+	utils.KeepLoading = false
+	time.Sleep(250 * time.Millisecond) 
+    fmt.Print("\r          \r")
+
 	t := time.Now()
 	elapsed := t.Sub(s)
+	if len(seen) < 1 {
+		fmt.Printf("\n%s┌──────────────────────────┐%s\n", ColorGreen, ColorReset)
+        fmt.Printf("│  %sNo open ports found!    %s│\n", ColorYellow, ColorReset)
+        fmt.Printf("%s└──────────────────────────┘%s\n", ColorGreen, ColorReset)
+
+	}
 	fmt.Print("--- scan finished ---\n")
 	fmt.Printf("\nscanned in %.2f seconds\n", elapsed.Seconds()) // <- hier
 	os.Exit(0)

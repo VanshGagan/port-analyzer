@@ -6,6 +6,7 @@ import (
 	"strings"
 	"port-analyzer/utils"
 	"time"
+	"os"
 )
 
 
@@ -14,10 +15,17 @@ func main() {
 
 
 	var portNames map[int]string
+	var target string
 	portNames = utils.PortNames
 
+	if len(os.Args) < 2 {
+		target = "127.0.0.1"
+	} else {
+		target = os.Args[1]
+	}
+
 	for port, name := range portNames {
-		conn, err := net.Dial("tcp", fmt.Sprintf("127.0.0.1:%d", port))
+		conn, err := net.DialTimeout("tcp", fmt.Sprintf("%s:%d", target, port), 1*time.Second)
 		if err != nil {
 			continue
 		}
@@ -33,7 +41,7 @@ func main() {
 
 		lines := strings.Split(data, "\n")
 		fmt.Println(lines[0])
-		fmt.Printf("%s", name)
+		fmt.Printf("%s\n\n", name)
 		conn.Close()
 	}
 
