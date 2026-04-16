@@ -29,6 +29,9 @@ func main() {
 		if err != nil {
 			continue
 		}
+		if port == 80 || port == 443{
+			fmt.Fprintf(conn, "GET / HTTP/1.1\r\nHost: %s\r\nConnection: close\r\n\r\n", target)
+		}
 		d:= make([]byte, 1024)
 
 		conn.SetReadDeadline(time.Now().Add(500 * time.Millisecond))
@@ -40,8 +43,8 @@ func main() {
 		data := string(d[:n])
 
 		lines := strings.Split(data, "\n")
-		fmt.Println(lines[0])
-		fmt.Printf("%s\n\n", name)
+		fmt.Printf("Banner of %s\n", name)
+		fmt.Printf("%s\n\n", lines[0])
 		conn.Close()
 	}
 
