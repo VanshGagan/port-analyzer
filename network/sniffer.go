@@ -36,7 +36,7 @@ func Sniffer(device string, results chan int, target_ip string) {
 			ip, _ := ipLayer.(*layers.IPv4)
 			//fmt.Printf("FROM PORT: %d\n", tcp.SrcPort)
 
-			
+			//detect OS (ttl)
 			if os_detected == false && ip.TTL > 0 {
 				fmt.Print("\r              \r")
 				fmt.Printf("\nTTL is: %d\n", ip.TTL)
@@ -45,10 +45,13 @@ func Sniffer(device string, results chan int, target_ip string) {
 				os_detected = true
 			}
 
+
 			//if we have syn-ack -> write to results
 			if tcp.SYN && tcp.ACK {
 				openPort := tcp.SrcPort
 				results <- int(openPort)
+				fmt.Printf("\nWindow size is: %d\n", tcp.Window)
+
 			}
 			
 		}
