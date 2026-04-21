@@ -1,12 +1,13 @@
 package network
 
 import (
-	"log"
 	"fmt"
+	"log"
+	"port-analyzer/utils"
+
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"
 	"github.com/google/gopacket/pcap"
-	"port-analyzer/utils"
 )
 
 func Sniffer(device string, results chan int, target_ip string) {
@@ -45,7 +46,6 @@ func Sniffer(device string, results chan int, target_ip string) {
 				os_detected = true
 			}
 
-
 			//if we have syn-ack -> write to results
 			if tcp.SYN && tcp.ACK {
 				openPort := tcp.SrcPort
@@ -53,7 +53,7 @@ func Sniffer(device string, results chan int, target_ip string) {
 				fmt.Printf("\nWindow size is: %d\n", tcp.Window)
 
 			}
-			
+
 		}
 
 	}
