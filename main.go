@@ -74,7 +74,7 @@ func main() {
 
 	go func() {
 		workerWg.Wait()
-		time.Sleep(2 * time.Second)
+		time.Sleep(4 * time.Second)
 		close(results)
 	}()
 
@@ -82,6 +82,10 @@ func main() {
 	seen := make(map[int]bool)
 
 	time.Sleep(2 * time.Second)
+
+	utils.KeepLoading = false
+	time.Sleep(200 * time.Millisecond)
+	fmt.Print("\r                          \r")
 
 	for res := range results {
 		name, exists := portNames[res]
@@ -119,6 +123,7 @@ func main() {
 
 	}
 	fmt.Print("--- scan finished ---\n")
-	fmt.Printf("\nscanned in %.2f seconds\n", elapsed.Seconds()) // <- hier
+	fmt.Printf("\nscanned in %.2f seconds\n", elapsed.Seconds())
+
 	os.Exit(0)
 }

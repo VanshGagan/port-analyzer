@@ -40,7 +40,7 @@ func Sniffer(device string, results chan int, target_ip string) {
 			//detect OS (ttl)
 			if os_detected == false && ip.TTL > 0 {
 				fmt.Print("\r              \r")
-				fmt.Printf("\nTTL is: %d\n", ip.TTL)
+				//fmt.Printf("\nTTL is: %d\n", ip.TTL)
 				os = utils.DetectOs(ip.TTL)
 				fmt.Printf("\nOperating system is probably: %s\n", os)
 				os_detected = true
@@ -50,7 +50,7 @@ func Sniffer(device string, results chan int, target_ip string) {
 			if tcp.SYN && tcp.ACK {
 				openPort := tcp.SrcPort
 				results <- int(openPort)
-				fmt.Printf("\nWindow size is: %d\n", tcp.Window)
+				//fmt.Printf("\nWindow size is: %d\n", tcp.Window)
 
 			}
 

@@ -30,7 +30,7 @@ func Banner_grabber(port int, target string, wg *sync.WaitGroup) {
 	data := string(d[:n])
 
 	lines := strings.Split(data, "\n")
-	fmt.Printf("Banner of %d\n", port)
+	fmt.Printf("\n\nBanner of %d\n", port)
 	fmt.Printf("%s\n\n", lines[0])
 	conn.Close()
 }
