@@ -26,6 +26,8 @@ func Sniffer(device string, results chan int, target_ip string) {
 	var os_detected bool = false
 	var os string
 
+	//list for the options
+	exists := make(map[string]bool)
 	packets := gopacket.NewPacketSource(handle, handle.LinkType())
 
 	for packet := range packets.Packets() {
@@ -48,6 +50,18 @@ func Sniffer(device string, results chan int, target_ip string) {
 
 			//if we have syn-ack -> write to results
 			if tcp.SYN && tcp.ACK {
+				//only current options
+
+				var currentOptions []string
+
+				for _, v := range tcp.Options {
+					if !exists[v.OptionType.String()] {
+						exists[v.OptionType.String()] = true
+					}
+					currentOptions = append(currentOptions, v.OptionType.String())
+				}
+				fmt.Printf("\n[DEBUG] Port %d TCP Options: %v\n", tcp.SrcPort, currentOptions)
+
 				openPort := tcp.SrcPort
 				results <- int(openPort)
 				//fmt.Printf("\nWindow size is: %d\n", tcp.Window)
@@ -57,4 +71,5 @@ func Sniffer(device string, results chan int, target_ip string) {
 		}
 
 	}
+
 }
