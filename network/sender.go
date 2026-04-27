@@ -11,7 +11,7 @@ import (
 )
 
 func SendSYNPacket(target_ip string, port int, conn net.PacketConn) {
-	
+
 	//set src and dst ip to send the SYN packet
 	var src_ip = utils.GetIP()
 	var dst_ip = net.ParseIP(target_ip)
@@ -33,6 +33,31 @@ func SendSYNPacket(target_ip string, port int, conn net.PacketConn) {
 		Seq:     1105024978,
 		SYN:     true,
 		Window:  14600,
+	}
+
+	tcp.Options = []layers.TCPOption{
+		{
+			OptionType:   layers.TCPOptionKindMSS,
+			OptionLength: 4,
+			OptionData:   []byte{0x05, 0xb4}, // 1460 Bytes
+		},
+		{
+			OptionType:   layers.TCPOptionKindSACKPermitted,
+			OptionLength: 2,
+		},
+		{
+			OptionType:   layers.TCPOptionKindWindowScale,
+			OptionLength: 3,
+			OptionData:   []byte{0x07}, // Multiplikator
+		},
+		{
+			OptionType: layers.TCPOptionKindNop, // NOP für das Alignment
+		},
+		{
+			OptionType:   layers.TCPOptionKindTimestamps,
+			OptionLength: 10,
+			OptionData:   make([]byte, 8), // 8 Bytes für TS Value und Echo Reply
+		},
 	}
 
 	//compute checksum
@@ -58,6 +83,5 @@ func SendSYNPacket(target_ip string, port int, conn net.PacketConn) {
 		log.Fatal(err)
 
 	}
-
 
 }
