@@ -10,29 +10,27 @@ A custom-built SYN-based port scanner written in Go, featuring packet sniffing, 
 - Detection of common ports and services
 
 ## Usage
-### Port-Analyzer
+### Port-Analyzer (Normal)
 ```bash
-sudo go run main.go <target-ip> (port-scanner)
+sudo go run main.go <target-ip>
 ```
-### Banner-Grabber
+### Port-Analyzer (with banner grabbing)
 ```bash
-sudo go run banner/grabber.go <target-ip> (banner-grabber)
+sudo go run main.go <target-ip> -b
 ```
 
 
 ## Example Output
-***
-### Port-Analyzer
+
+### Port analysis with banner grabbing
+#### Input (with the ip of: scanme.nmap.org)
 ```bash
-             
-TTL is: 57
-
+sudo go run main.go 45.33.32.156 -b
+```
+#### Output
+```bash        
 Operating system is probably: Linux/Mac/Android
-Scanning.. 
-┌──────────────────────────────────────────┐
-│  [FOUND] Port: 22     Name: SSH          │
-└──────────────────────────────────────────┐
-
+                          
 ┌──────────────────────────────────────────┐
 │  [FOUND] Port: 21     Name: FTP          │
 └──────────────────────────────────────────┐
@@ -40,21 +38,33 @@ Scanning..
 ┌──────────────────────────────────────────┐
 │  [FOUND] Port: 80     Name: HTTP         │
 └──────────────────────────────────────────┐
+
+┌──────────────────────────────────────────┐
+│  [FOUND] Port: 22     Name: SSH          │
+└──────────────────────────────────────────┐
+
+
+Banner of port 80:
+HTTP/1.1 200 OK
+
+
+
+Banner of port 22:
+SSH-2.0-OpenSSH_6.6.1p1 Ubuntu-2ubuntu2.13
+
 --- scan finished ---
 
-scanned in 3.86 seconds
+scanned in 5.86 seconds
+
 ```
 - Predicted OS
 - Found open-ports (22, 21, 80)
-- Duration was 3.86 seconds
-
-### Banner Grabber
-```bash
-SSH-2.0-OpenSSH_6.6.1p1 Ubuntu-2ubuntu2.13
-```
-- Grabbed SSH banner
+- Duration was 5.86 seconds
+- Grabbed SSH and HTTP banner
 - Identified OpenSSH version 6.6.1p1
 - Detected Ubuntu system
+
+***
 
 ## Performance
 
@@ -87,3 +97,4 @@ port-analyzer/
 
 This project was built for educational purposes only. 
 Only scan systems you own or have explicit permission to test.
+
